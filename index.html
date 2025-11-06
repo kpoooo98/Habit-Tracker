@@ -1,9 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GrowDaily Tracker (Demo)</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -17,17 +11,9 @@
 </style>
 </head>
 <body class="p-6 sm:p-10">
-
-<header class="text-center mb-8">
-  <h1 class="text-5xl font-extrabold text-purple-800">GrowDaily <span class="text-pink-500">Tracker</span></h1>
-  <p class="text-purple-600 font-medium mt-2">Track habits and get motivational guidance (demo mode)</p>
-</header>
-
-<!-- Habit List -->
 <h2 class="text-2xl font-bold text-purple-800 mb-4">Your Habits</h2>
 <div id="habit-list" class="space-y-4 mb-8"></div>
 
-<!-- Add Habit -->
 <div class="card p-6 mb-8">
   <h2 class="text-2xl font-bold text-gray-800 mb-4">Add a New Habit</h2>
   <form id="add-habit-form" class="flex flex-col sm:flex-row gap-3">
@@ -36,7 +22,6 @@
   </form>
 </div>
 
-<!-- AI Coach -->
 <div class="ai-card card p-6">
   <h2 class="text-2xl font-bold text-purple-700 mb-4 flex items-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
@@ -55,63 +40,117 @@
 </div>
 
 <script>
-  const habitList=document.getElementById('habit-list');
-  const form=document.getElementById('add-habit-form');
-  const input=document.getElementById('new-habit-input');
-  let habits=JSON.parse(localStorage.getItem('habits_demo')||'[]');
+  const habitList = document.getElementById('habit-list');
+  const form = document.getElementById('add-habit-form');
+  const input = document.getElementById('new-habit-input');
+  let habits = JSON.parse(localStorage.getItem('habits_demo') || '[]');
 
   function render(){
-    habitList.innerHTML='';
-    if(!habits.length){habitList.innerHTML='<div class="card p-6 text-center text-gray-500">No habits yet. Add one below!</div>';return;}
-    habits.forEach((h,i)=>{
-      const div=document.createElement('div');
-      div.className='card p-5 flex flex-col sm:flex-row items-center justify-between';
-      div.innerHTML=`
+    habitList.innerHTML = '';
+    if(!habits.length){
+      habitList.innerHTML = '<div class="card p-6 text-center text-gray-500">No habits yet. Add one below!</div>';
+      return;
+    }
+    habits.forEach((h, i) => {
+      const div = document.createElement('div');
+      div.className = 'card p-5 flex flex-col sm:flex-row items-center justify-between';
+      div.innerHTML = `
         <div class="font-bold text-lg text-gray-800">${h.name}</div>
-        <button data-i="${i}" class="toggle bg-${h.done?'green':'pink'}-500 text-white px-6 py-2 rounded-xl mt-3 sm:mt-0">${h.done?'Done':'Mark Done'}</button>`;
+        <div class="flex gap-3 mt-3 sm:mt-0">
+          <button data-i="${i}" class="toggle bg-${h.done?'green':'pink'}-500 text-white font-medium px-4 py-2 rounded-xl hover:bg-${h.done?'green':'pink'}-600">${h.done?'Done Today':'Mark Done'}</button>
+          <button data-i="${i}" class="delete bg-gray-200 text-gray-600 font-medium px-4 py-2 rounded-xl hover:bg-gray-300">Remove</button>
+        </div>`;
       habitList.appendChild(div);
     });
   }
 
-  habitList.addEventListener('click',e=>{
-    if(!e.target.classList.contains('toggle'))return;
-    const i=e.target.dataset.i;
-    habits[i].done=!habits[i].done;
-    localStorage.setItem('habits_demo',JSON.stringify(habits));
+  habitList.addEventListener('click', e => {
+    const i = e.target.dataset.i;
+    if (i === undefined) return; // Not a button with data-i
+
+    if (e.target.classList.contains('toggle')) {
+      // Toggle logic
+      habits[i].done = !habits[i].done;
+    } else if (e.target.classList.contains('delete')) {
+      // **NEW DELETE LOGIC**
+      if (confirm(`Are you sure you want to remove the habit: "${habits[i].name}"?`)) {
+        habits.splice(i, 1); // Remove 1 element at index i
+      } else {
+        return; // Stop if the user cancels
+      }
+    }
+
+    localStorage.setItem('habits_demo', JSON.stringify(habits));
     render();
   });
 
-  form.addEventListener('submit',e=>{
+  form.addEventListener('submit', e => {
     e.preventDefault();
-    habits.push({name:input.value,done:false});
-    localStorage.setItem('habits_demo',JSON.stringify(habits));
-    input.value='';render();
+    habits.push({name: input.value, done: false});
+    localStorage.setItem('habits_demo', JSON.stringify(habits));
+    input.value = '';
+    render();
   });
 
   render();
 
-  // --- Demo AI ---
-  const aiForm=document.getElementById('ai-chat-form');
-  const aiInput=document.getElementById('ai-prompt-input');
-  const aiArea=document.getElementById('ai-response-area');
-  aiForm.addEventListener('submit',e=>{
+  // --- Improved Demo AI ---
+  const aiForm = document.getElementById('ai-chat-form');
+  const aiInput = document.getElementById('ai-prompt-input');
+  const aiArea = document.getElementById('ai-response-area');
+  aiForm.addEventListener('submit', e => {
     e.preventDefault();
-    const q=aiInput.value.trim();
-    if(!q)return;
-    aiArea.innerHTML=`<p class="text-purple-600">Coach Synapse:</p><p class="mt-2">${getDemoResponse(q)}</p>`;
-    aiInput.value='';
+    const q = aiInput.value.trim().toLowerCase();
+    if (!q) return;
+
+    // Simulate a brief loading state
+    aiArea.innerHTML = `<p class="text-purple-600">Coach Synapse is thinking...</p>`;
+    aiInput.value = '';
+
+    // Simulate AI response delay
+    setTimeout(() => {
+        aiArea.innerHTML = `<p class="text-purple-600">Coach Synapse:</p><p class="mt-2">${getDemoResponse(q)}</p>`;
+    }, 500);
   });
+  
   function getDemoResponse(q){
-    const samples=[
-      "Stay consistent — small wins build unstoppable momentum!",
-      "Remember: motivation gets you started, discipline keeps you going.",
-      "You're doing great! Try pairing your habit with an existing routine.",
-      "Don't aim for perfect days — aim for progress over time."
+    const currentHabits = habits.map(h => h.name);
+    const completedCount = habits.filter(h => h.done).length;
+    const totalCount = habits.length;
+
+    // 1. **Rule-Based Responses (Improved)**
+    if (q.includes('done') || q.includes('progress')) {
+      if (totalCount === 0) {
+        return "It looks like you haven't added any habits yet! Let's start with one small, achievable goal.";
+      }
+      if (completedCount === totalCount && totalCount > 0) {
+        return `**Amazing!** You've completed all ${totalCount} of your habits for today. You are a consistency machine. Keep this momentum going!`;
+      }
+      if (completedCount > 0 && completedCount < totalCount) {
+        return `Great job! You've completed **${completedCount} out of ${totalCount}** habits. Finish that last item—you're so close!`;
+      }
+      if (completedCount === 0 && totalCount > 0) {
+         return `You have ${totalCount} habits waiting! Start with the easiest one right now to build momentum. A single step is all it takes!`;
+      }
+    } else if (q.includes('advice') || q.includes('struggle')) {
+      return "When you struggle, remember the **2-Minute Rule**: If a habit takes less than two minutes, do it right now. This builds the identity you want.";
+    } else if (q.includes('habits')) {
+        return totalCount > 0 
+           ? `Your current habits are: **${currentHabits.join(', ')}**. Focus on making one of them non-negotiable today!`
+           : "No habits yet! A good habit to start with is 'Drink a glass of water'—simple, but powerful.";
+    } 
+    
+    // 2. **Motivational/Random Fallback (Expanded)**
+    const samples = [
+      "Stay consistent—small wins build unstoppable momentum! Remember to focus on the process, not just the outcome.",
+      "Remember: motivation gets you started, **discipline** keeps you going. What small step can you take right now?",
+      "You're doing great! Try pairing your habit with an existing routine. (e.g., 'After I brush my teeth, I will read 1 page').",
+      "Don't aim for perfect days—aim for progress over time. A bad day of practice is still more valuable than a perfect day of doing nothing.",
+      "Ask yourself: **'Who do I want to become?'** Every action you take is a vote for that person. Make your next vote a good one.",
+      "The key to forming a new habit is to make it visible, attractive, easy, and satisfying. How can you make your habit easier?"
     ];
-    return samples[Math.floor(Math.random()*samples.length)];
+    return samples[Math.floor(Math.random() * samples.length)];
   }
 </script>
 </body>
 </html>
-
-
