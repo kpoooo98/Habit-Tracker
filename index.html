@@ -1,156 +1,245 @@
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
-  body {
-    font-family: 'Inter', sans-serif;
-    background: radial-gradient(circle at 10% 20%, #f9a7f9, #f7f3ff);
-    min-height: 100vh;
-  }
-  .card { background:#fff; border-radius:1.5rem; box-shadow:0 10px 15px -3px rgba(0,0,0,.1); }
-  .ai-card{border-top:5px solid #a855f7;}
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Habit Tracker + Monthly Calendar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 10% 20%, #f9a7f9, #f7f3ff);
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,.1);
+    }
+    .ai-card {
+      border-top: 5px solid #a855f7;
+    }
+    .day-cell {
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .day-cell.done {
+      background-color: #34d399; /* green */
+      color: white;
+      font-weight: bold;
+    }
+    .day-cell.partial {
+      background-color: #facc15; /* yellow */
+      color: #333;
+      font-weight: bold;
+    }
+    .day-cell.today {
+      border: 2px solid #a855f7;
+    }
+    .day-cell:hover {
+      transform: scale(1.1);
+    }
+  </style>
 </head>
 <body class="p-6 sm:p-10">
-<h2 class="text-2xl font-bold text-purple-800 mb-4">Your Habits</h2>
-<div id="habit-list" class="space-y-4 mb-8"></div>
 
-<div class="card p-6 mb-8">
-  <h2 class="text-2xl font-bold text-gray-800 mb-4">Add a New Habit</h2>
-  <form id="add-habit-form" class="flex flex-col sm:flex-row gap-3">
-    <input id="new-habit-input" class="flex-grow p-4 border-2 border-pink-200 rounded-xl" placeholder="e.g., Read 20 pages" required/>
-    <button class="bg-pink-500 text-white font-bold py-3 px-8 rounded-xl hover:bg-pink-600">Add</button>
-  </form>
-</div>
+  <h2 class="text-3xl font-extrabold text-purple-800 mb-4">Habit Tracker</h2>
 
-<div class="ai-card card p-6">
-  <h2 class="text-2xl font-bold text-purple-700 mb-4 flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd" d="M9.243 3.03a1 1 0 01.527-.47L11.5 2.12a1 1 0 01.996.127l3 3a1 1 0 01.127.996l-1.432 2.73a1 1 0 01-.47.527L16.97 10.5a1 1 0 010 2.94l-2.73 1.432a1 1 0 01-.527.47l-2.73 1.432a1 1 0 01-.996-.127l-3-3a1 1 0 01-.127-.996l1.432-2.73a1 1 0 01.47-.527L3.03 9.243a1 1 0 01-.47-.527L2.12 7.5a1 1 0 01.127-.996l3-3a1 1 0 01.996-.127l2.73 1.432a1 1 0 01.527.47z" clip-rule="evenodd"/>
-    </svg> Coach Synapse
-  </h2>
+  <!-- Habit list -->
+  <h2 class="text-2xl font-bold text-purple-800 mb-4">Your Habits</h2>
+  <div id="habit-list" class="space-y-4 mb-8"></div>
 
-  <div id="ai-response-area" class="p-5 bg-purple-50 rounded-lg border border-purple-200 text-gray-700 mb-4 min-h-[100px]">
-    <p class="text-gray-400 italic">Ask your coach for motivation or advice!</p>
+  <!-- Add habit -->
+  <div class="card p-6 mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Add a New Habit</h2>
+    <form id="add-habit-form" class="flex flex-col sm:flex-row gap-3">
+      <input id="new-habit-input" class="flex-grow p-4 border-2 border-pink-200 rounded-xl" placeholder="e.g., Read 20 pages" required/>
+      <button class="bg-pink-500 text-white font-bold py-3 px-8 rounded-xl hover:bg-pink-600">Add</button>
+    </form>
   </div>
 
-  <form id="ai-chat-form" class="flex gap-3">
-    <input id="ai-prompt-input" class="flex-grow p-3 border-2 border-gray-200 rounded-xl" placeholder="Ask your coach..." required/>
-    <button id="ai-send-button" class="bg-purple-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-purple-700">Send</button>
-  </form>
-</div>
+  <!-- Calendar -->
+  <div class="card p-6 mb-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Monthly Progress</h2>
+    <div id="calendar" class="grid grid-cols-7 gap-2 text-center"></div>
+    <div id="month-label" class="mt-4 text-center text-gray-600 font-semibold"></div>
+    <div id="day-summary" class="mt-4 text-center text-gray-700 italic"></div>
+  </div>
 
-<script>
-  const habitList = document.getElementById('habit-list');
-  const form = document.getElementById('add-habit-form');
-  const input = document.getElementById('new-habit-input');
-  let habits = JSON.parse(localStorage.getItem('habits_demo') || '[]');
+  <!-- Coach Synapse -->
+  <div class="ai-card card p-6">
+    <h2 class="text-2xl font-bold text-purple-700 mb-4 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.243 3.03a1 1 0 01.527-.47L11.5 2.12a1 1 0 01.996.127l3 3a1 1 0 01.127.996l-1.432 2.73a1 1 0 01-.47.527L16.97 10.5a1 1 0 010 2.94l-2.73 1.432a1 1 0 01-.527.47l-2.73 1.432a1 1 0 01-.996-.127l-3-3a1 1 0 01-.127-.996l1.432-2.73a1 1 0 01.47-.527L3.03 9.243a1 1 0 01-.47-.527L2.12 7.5a1 1 0 01.127-.996l3-3a1 1 0 01.996-.127l2.73 1.432a1 1 0 01.527.47z" clip-rule="evenodd"/>
+      </svg>
+      Coach Synapse
+    </h2>
 
-  function render(){
-    habitList.innerHTML = '';
-    if(!habits.length){
-      habitList.innerHTML = '<div class="card p-6 text-center text-gray-500">No habits yet. Add one below!</div>';
-      return;
+    <div id="ai-response-area" class="p-5 bg-purple-50 rounded-lg border border-purple-200 text-gray-700 mb-4 min-h-[100px]">
+      <p class="text-gray-400 italic">Ask your coach for motivation or advice!</p>
+    </div>
+
+    <form id="ai-chat-form" class="flex gap-3">
+      <input id="ai-prompt-input" class="flex-grow p-3 border-2 border-gray-200 rounded-xl" placeholder="Ask your coach..." required/>
+      <button id="ai-send-button" class="bg-purple-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-purple-700">Send</button>
+    </form>
+  </div>
+
+  <script>
+    // --- Variables and Helpers ---
+    const habitList = document.getElementById('habit-list');
+    const calendarEl = document.getElementById('calendar');
+    const monthLabel = document.getElementById('month-label');
+    const daySummary = document.getElementById('day-summary');
+    const form = document.getElementById('add-habit-form');
+    const input = document.getElementById('new-habit-input');
+
+    let habits = JSON.parse(localStorage.getItem('habits_monthly_v2') || '[]');
+    let progress = JSON.parse(localStorage.getItem('progress_data') || '{}'); 
+    const today = new Date().toISOString().split('T')[0];
+
+    const save = () => {
+      localStorage.setItem('habits_monthly_v2', JSON.stringify(habits));
+      localStorage.setItem('progress_data', JSON.stringify(progress));
+    };
+
+    // --- Render Habits ---
+    function renderHabits() {
+      habitList.innerHTML = '';
+      if (!habits.length) {
+        habitList.innerHTML = '<div class="card p-6 text-center text-gray-500">No habits yet. Add one below!</div>';
+        return;
+      }
+
+      habits.forEach((h, i) => {
+        const doneToday = progress[today]?.includes(h.name);
+        const div = document.createElement('div');
+        div.className = 'card p-5 flex justify-between items-center';
+        div.innerHTML = `
+          <div class="font-bold text-lg text-gray-800">${h.name}</div>
+          <div class="flex gap-3">
+            <button data-i="${i}" class="toggle ${doneToday ? 'bg-green-500' : 'bg-pink-500'} text-white font-medium px-4 py-2 rounded-xl hover:bg-pink-600">
+              ${doneToday ? 'Completed' : 'Mark Done'}
+            </button>
+            <button data-i="${i}" class="delete bg-gray-200 text-gray-600 font-medium px-4 py-2 rounded-xl hover:bg-gray-300">Remove</button>
+          </div>`;
+        habitList.appendChild(div);
+      });
     }
-    habits.forEach((h, i) => {
-      const div = document.createElement('div');
-      div.className = 'card p-5 flex flex-col sm:flex-row items-center justify-between';
-      div.innerHTML = `
-        <div class="font-bold text-lg text-gray-800">${h.name}</div>
-        <div class="flex gap-3 mt-3 sm:mt-0">
-          <button data-i="${i}" class="toggle bg-${h.done?'green':'pink'}-500 text-white font-medium px-4 py-2 rounded-xl hover:bg-${h.done?'green':'pink'}-600">${h.done?'Done Today':'Mark Done'}</button>
-          <button data-i="${i}" class="delete bg-gray-200 text-gray-600 font-medium px-4 py-2 rounded-xl hover:bg-gray-300">Remove</button>
-        </div>`;
-      habitList.appendChild(div);
+
+    // --- Render Calendar ---
+    function renderCalendar() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const monthName = now.toLocaleString('default', { month: 'long' });
+      monthLabel.textContent = `${monthName} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      calendarEl.innerHTML = '';
+      for (let i = 0; i < firstDay; i++) calendarEl.innerHTML += `<div></div>`;
+      
+      for (let d = 1; d <= totalDays; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const completed = progress[dateStr]?.length || 0;
+        const total = habits.length;
+        const todayClass = (dateStr === today) ? 'today' : '';
+        let className = '';
+        if (completed === total && total > 0) className = 'done';
+        else if (completed > 0) className = 'partial';
+
+        calendarEl.innerHTML += `<div data-date="${dateStr}" class="day-cell ${className} ${todayClass}">${d}</div>`;
+      }
+    }
+
+    // --- Show Summary When Click Date ---
+    calendarEl.addEventListener('click', e => {
+      const date = e.target.dataset.date;
+      if (!date) return;
+      const doneList = progress[date] || [];
+      if (!habits.length) {
+        daySummary.textContent = "No habits yet.";
+        return;
+      }
+      const total = habits.length;
+      const count = doneList.length;
+      let text = `On ${date}: ${count}/${total} habits completed.`;
+      if (count > 0) text += ` ✅ (${doneList.join(', ')})`;
+      daySummary.textContent = text;
     });
-  }
 
-  habitList.addEventListener('click', e => {
-    const i = e.target.dataset.i;
-    if (i === undefined) return; // Not a button with data-i
+    // --- Mark Done Button ---
+    habitList.addEventListener('click', e => {
+      const i = e.target.dataset.i;
+      if (i === undefined) return;
+      const habitName = habits[i].name;
 
-    if (e.target.classList.contains('toggle')) {
-      // Toggle logic
-      habits[i].done = !habits[i].done;
-    } else if (e.target.classList.contains('delete')) {
-      // **NEW DELETE LOGIC**
-      if (confirm(`Are you sure you want to remove the habit: "${habits[i].name}"?`)) {
-        habits.splice(i, 1); // Remove 1 element at index i
-      } else {
-        return; // Stop if the user cancels
+      if (e.target.classList.contains('toggle')) {
+        progress[today] = progress[today] || [];
+        if (!progress[today].includes(habitName)) {
+          progress[today].push(habitName);
+        }
+      } else if (e.target.classList.contains('delete')) {
+        if (confirm(`Remove habit "${habitName}"?`)) habits.splice(i, 1);
       }
+
+      save();
+      renderHabits();
+      renderCalendar();
+    });
+
+    // --- Add Habit Form ---
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      habits.push({ name: input.value });
+      input.value = '';
+      save();
+      renderHabits();
+      renderCalendar();
+    });
+
+    // --- Initial Render ---
+    renderHabits();
+    renderCalendar();
+
+    // --- AI Chat (Simple Demo) ---
+    const aiForm = document.getElementById('ai-chat-form');
+    const aiInput = document.getElementById('ai-prompt-input');
+    const aiArea = document.getElementById('ai-response-area');
+    aiForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const q = aiInput.value.trim().toLowerCase();
+      if (!q) return;
+      aiArea.innerHTML = `<p class="text-purple-600">Coach Synapse is thinking...</p>`;
+      aiInput.value = '';
+      setTimeout(() => {
+        aiArea.innerHTML = `<p class="text-purple-600 font-bold">Coach Synapse:</p><p class="mt-2">${getResponse(q)}</p>`;
+      }, 500);
+    });
+
+    function getResponse(q){
+      const totalDays = Object.keys(progress).length;
+      if (q.includes('progress') || q.includes('month')) {
+        return `You've logged ${totalDays} active day${totalDays!==1?'s':''} this month! Keep your streak going!`;
+      }
+      const lines = [
+        "Each green box is a victory—keep filling the month with them!",
+        "Even one step counts—small wins make big changes.",
+        "A missed day isn’t failure, it’s feedback. Start again today!",
+        "Your habits are votes for the person you want to become."
+      ];
+      return lines[Math.floor(Math.random()*lines.length)];
     }
-
-    localStorage.setItem('habits_demo', JSON.stringify(habits));
-    render();
-  });
-
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    habits.push({name: input.value, done: false});
-    localStorage.setItem('habits_demo', JSON.stringify(habits));
-    input.value = '';
-    render();
-  });
-
-  render();
-
-  // --- Improved Demo AI ---
-  const aiForm = document.getElementById('ai-chat-form');
-  const aiInput = document.getElementById('ai-prompt-input');
-  const aiArea = document.getElementById('ai-response-area');
-  aiForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const q = aiInput.value.trim().toLowerCase();
-    if (!q) return;
-
-    // Simulate a brief loading state
-    aiArea.innerHTML = `<p class="text-purple-600">Coach Synapse is thinking...</p>`;
-    aiInput.value = '';
-
-    // Simulate AI response delay
-    setTimeout(() => {
-        aiArea.innerHTML = `<p class="text-purple-600">Coach Synapse:</p><p class="mt-2">${getDemoResponse(q)}</p>`;
-    }, 500);
-  });
-  
-  function getDemoResponse(q){
-    const currentHabits = habits.map(h => h.name);
-    const completedCount = habits.filter(h => h.done).length;
-    const totalCount = habits.length;
-
-    // 1. **Rule-Based Responses (Improved)**
-    if (q.includes('done') || q.includes('progress')) {
-      if (totalCount === 0) {
-        return "It looks like you haven't added any habits yet! Let's start with one small, achievable goal.";
-      }
-      if (completedCount === totalCount && totalCount > 0) {
-        return `**Amazing!** You've completed all ${totalCount} of your habits for today. You are a consistency machine. Keep this momentum going!`;
-      }
-      if (completedCount > 0 && completedCount < totalCount) {
-        return `Great job! You've completed **${completedCount} out of ${totalCount}** habits. Finish that last item—you're so close!`;
-      }
-      if (completedCount === 0 && totalCount > 0) {
-         return `You have ${totalCount} habits waiting! Start with the easiest one right now to build momentum. A single step is all it takes!`;
-      }
-    } else if (q.includes('advice') || q.includes('struggle')) {
-      return "When you struggle, remember the **2-Minute Rule**: If a habit takes less than two minutes, do it right now. This builds the identity you want.";
-    } else if (q.includes('habits')) {
-        return totalCount > 0 
-           ? `Your current habits are: **${currentHabits.join(', ')}**. Focus on making one of them non-negotiable today!`
-           : "No habits yet! A good habit to start with is 'Drink a glass of water'—simple, but powerful.";
-    } 
-    
-    // 2. **Motivational/Random Fallback (Expanded)**
-    const samples = [
-      "Stay consistent—small wins build unstoppable momentum! Remember to focus on the process, not just the outcome.",
-      "Remember: motivation gets you started, **discipline** keeps you going. What small step can you take right now?",
-      "You're doing great! Try pairing your habit with an existing routine. (e.g., 'After I brush my teeth, I will read 1 page').",
-      "Don't aim for perfect days—aim for progress over time. A bad day of practice is still more valuable than a perfect day of doing nothing.",
-      "Ask yourself: **'Who do I want to become?'** Every action you take is a vote for that person. Make your next vote a good one.",
-      "The key to forming a new habit is to make it visible, attractive, easy, and satisfying. How can you make your habit easier?"
-    ];
-    return samples[Math.floor(Math.random() * samples.length)];
-  }
-</script>
+  </script>
 </body>
 </html>
