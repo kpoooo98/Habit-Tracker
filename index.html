@@ -20,33 +20,65 @@
     .ai-card {
       border-top: 5px solid #a855f7;
     }
+
+    /* --- Calendar Styling --- */
+    #calendar {
+      background-color: #faf5ff;
+      border: 2px solid #c084fc;
+      border-radius: 1rem;
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
     .day-cell {
-      width: 2.5rem;
-      height: 2.5rem;
+      height: 3rem;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid #d8b4fe;
       border-radius: 0.5rem;
       font-size: 0.9rem;
+      background-color: #fff;
+      color: #4b5563;
+      font-weight: 600;
       cursor: pointer;
-      transition: 0.2s;
+      transition: all 0.2s ease;
     }
+
     .day-cell.done {
-      background-color: #34d399; /* green */
+      background-color: #34d399; /* Green */
       color: white;
-      font-weight: bold;
+      border-color: #059669;
     }
+
     .day-cell.partial {
-      background-color: #facc15; /* yellow */
-      color: #333;
+      background-color: #fcd34d; /* Yellow */
+      color: #78350f;
+      border-color: #fbbf24;
+    }
+
+    .day-cell.today {
+      border: 2px solid #9333ea; /* Purple border for today */
+      background-color: #ede9fe;
       font-weight: bold;
     }
-    .day-cell.today {
-      border: 2px solid #a855f7;
-    }
+
     .day-cell:hover {
-      transform: scale(1.1);
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
+
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: 700;
+      color: #6b21a8;
+      margin-bottom: 0.5rem;
+    }
+
   </style>
 </head>
 <body class="p-6 sm:p-10">
@@ -69,7 +101,20 @@
   <!-- Calendar -->
   <div class="card p-6 mb-8">
     <h2 class="text-2xl font-bold text-gray-800 mb-4">Monthly Progress</h2>
-    <div id="calendar" class="grid grid-cols-7 gap-2 text-center"></div>
+
+    <!-- Calendar Header -->
+    <div class="calendar-header">
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div id="calendar"></div>
     <div id="month-label" class="mt-4 text-center text-gray-600 font-semibold"></div>
     <div id="day-summary" class="mt-4 text-center text-gray-700 italic"></div>
   </div>
@@ -94,7 +139,6 @@
   </div>
 
   <script>
-    // --- Variables and Helpers ---
     const habitList = document.getElementById('habit-list');
     const calendarEl = document.getElementById('calendar');
     const monthLabel = document.getElementById('month-label');
@@ -102,16 +146,15 @@
     const form = document.getElementById('add-habit-form');
     const input = document.getElementById('new-habit-input');
 
-    let habits = JSON.parse(localStorage.getItem('habits_monthly_v2') || '[]');
-    let progress = JSON.parse(localStorage.getItem('progress_data') || '{}'); 
+    let habits = JSON.parse(localStorage.getItem('habits_monthly_v3') || '[]');
+    let progress = JSON.parse(localStorage.getItem('progress_data_v3') || '{}');
     const today = new Date().toISOString().split('T')[0];
 
     const save = () => {
-      localStorage.setItem('habits_monthly_v2', JSON.stringify(habits));
-      localStorage.setItem('progress_data', JSON.stringify(progress));
+      localStorage.setItem('habits_monthly_v3', JSON.stringify(habits));
+      localStorage.setItem('progress_data_v3', JSON.stringify(progress));
     };
 
-    // --- Render Habits ---
     function renderHabits() {
       habitList.innerHTML = '';
       if (!habits.length) {
@@ -135,7 +178,6 @@
       });
     }
 
-    // --- Render Calendar ---
     function renderCalendar() {
       const now = new Date();
       const year = now.getFullYear();
@@ -147,8 +189,10 @@
       const totalDays = new Date(year, month + 1, 0).getDate();
 
       calendarEl.innerHTML = '';
-      for (let i = 0; i < firstDay; i++) calendarEl.innerHTML += `<div></div>`;
-      
+      for (let i = 0; i < firstDay; i++) {
+        calendarEl.innerHTML += `<div></div>`;
+      }
+
       for (let d = 1; d <= totalDays; d++) {
         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const completed = progress[dateStr]?.length || 0;
@@ -162,7 +206,6 @@
       }
     }
 
-    // --- Show Summary When Click Date ---
     calendarEl.addEventListener('click', e => {
       const date = e.target.dataset.date;
       if (!date) return;
@@ -178,7 +221,6 @@
       daySummary.textContent = text;
     });
 
-    // --- Mark Done Button ---
     habitList.addEventListener('click', e => {
       const i = e.target.dataset.i;
       if (i === undefined) return;
@@ -198,7 +240,6 @@
       renderCalendar();
     });
 
-    // --- Add Habit Form ---
     form.addEventListener('submit', e => {
       e.preventDefault();
       habits.push({ name: input.value });
@@ -208,38 +249,8 @@
       renderCalendar();
     });
 
-    // --- Initial Render ---
     renderHabits();
     renderCalendar();
-
-    // --- AI Chat (Simple Demo) ---
-    const aiForm = document.getElementById('ai-chat-form');
-    const aiInput = document.getElementById('ai-prompt-input');
-    const aiArea = document.getElementById('ai-response-area');
-    aiForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const q = aiInput.value.trim().toLowerCase();
-      if (!q) return;
-      aiArea.innerHTML = `<p class="text-purple-600">Coach Synapse is thinking...</p>`;
-      aiInput.value = '';
-      setTimeout(() => {
-        aiArea.innerHTML = `<p class="text-purple-600 font-bold">Coach Synapse:</p><p class="mt-2">${getResponse(q)}</p>`;
-      }, 500);
-    });
-
-    function getResponse(q){
-      const totalDays = Object.keys(progress).length;
-      if (q.includes('progress') || q.includes('month')) {
-        return `You've logged ${totalDays} active day${totalDays!==1?'s':''} this month! Keep your streak going!`;
-      }
-      const lines = [
-        "Each green box is a victory—keep filling the month with them!",
-        "Even one step counts—small wins make big changes.",
-        "A missed day isn’t failure, it’s feedback. Start again today!",
-        "Your habits are votes for the person you want to become."
-      ];
-      return lines[Math.floor(Math.random()*lines.length)];
-    }
   </script>
 </body>
 </html>
